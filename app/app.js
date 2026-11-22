@@ -520,7 +520,7 @@ function openNotes() {
 let deferredInstall = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; });
 addEventListener('appinstalled', () => { deferredInstall = null; closeSheet(); toast('¡App instalada! Búscala en tu pantalla de inicio.'); });
-const isStandalone = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch { return false; } };
+const isStandalone = () => { try { return /AgenteMovilApp/.test(navigator.userAgent) || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch { return false; } };
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 function openInstall() {
   sheet(`<div class="head"><h2>Instalar la app</h2><button class="x" data-close aria-label="Cerrar">×</button></div>
@@ -530,15 +530,16 @@ function openInstall() {
       <div class="line"><span>2. Elige “Agregar a inicio”.</span></div>
       <div class="line"><span>3. Toca “Agregar”. El ícono aparecerá en tu pantalla.</span></div></div>
       <p class="hint">Debe abrirse en Safari; desde otros navegadores de iPhone no se puede instalar.</p>`
-    : `<button class="btn block" id="doinst">Instalar ahora</button>
-      <p class="err" id="insterr"></p>
-      <div class="calc"><b>Si el botón no responde (Android, Chrome):</b>
-      <div class="line"><span>1. Toca el menú ⋮ arriba a la derecha.</span></div>
-      <div class="line"><span>2. Elige “Instalar app” o “Agregar a pantalla principal”.</span></div>
-      <div class="line"><span>3. Confirma en “Instalar”.</span></div></div>`}`, bg => {
+    : `<a class="btn block" href="../agente-movil.apk" download>Descargar la app (APK)</a>
+      <div class="calc"><b>En Android:</b>
+      <div class="line"><span>1. Toca el botón y espera la descarga.</span></div>
+      <div class="line"><span>2. Abre el archivo agente-movil.apk.</span></div>
+      <div class="line"><span>3. Si tu celular lo pide, permite “instalar apps de esta fuente” y toca Instalar.</span></div></div>
+      <button class="btn ghost block" id="doinst" style="margin-top:12px">Instalar sin descargar</button>
+      <p class="err" id="insterr"></p>`}`, bg => {
     const b = $('#doinst', bg);
     if (b) b.onclick = async () => {
-      if (!deferredInstall) { $('#insterr', bg).textContent = 'Tu navegador no mostró la instalación automática. Sigue los 3 pasos de abajo.'; return; }
+      if (!deferredInstall) { $('#insterr', bg).textContent = 'Tu navegador no lo permite ahora. Usa el botón de descarga, o el menú ⋮ de Chrome → “Instalar app”.'; return; }
       deferredInstall.prompt(); try { await deferredInstall.userChoice; } catch {} deferredInstall = null;
     };
   });
