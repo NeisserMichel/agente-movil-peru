@@ -48,6 +48,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 label{display:block;font-size:14px;font-weight:500;margin:14px 0 6px}
 input,select,textarea{width:100%;min-height:48px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:16px}
 textarea{min-height:80px;resize:vertical}
+.pww{position:relative}.pww input{padding-right:52px}
+.eye{position:absolute;right:2px;top:2px;width:44px;height:44px;border:0;border-radius:10px;background:none;color:var(--mute);display:grid;place-items:center;cursor:pointer}
+.eye[aria-pressed=true]{color:var(--gd)}.eye:focus-visible{outline:3px solid var(--bd)}
 .hint{font-size:13px;color:var(--mute);margin:6px 0 0}
 .err{color:var(--bad);font-size:14px;margin:10px 0 0;min-height:1em}
 .chips{display:flex;flex-wrap:wrap;gap:8px}

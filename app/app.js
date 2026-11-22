@@ -31,7 +31,7 @@ function supabaseBackend() {
   let sb, me = null;
   const ready = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js';
+    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js';
     s.onload = () => { sb = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY); res(); };
     s.onerror = () => rej(new Error('No se pudo cargar Supabase. Revisa tu conexión.'));
     document.head.appendChild(s);
@@ -204,6 +204,9 @@ function askOsPermission() {
 const logo = `<img src="logo.png" alt="Agente Móvil">`;
 const bell = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>`;
 const exitI = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>`;
+const eyeOn = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const eyeOff = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4M6.5 6.6C3.7 8.500 2 12 2 12s3.6 7 10 7c1.700 0 3.200-.5 4.500-1.200M9.900 9.900a3 3 0 0 0 4.200 4.200"/></svg>`;
+const pwField = (id, extra) => `<div class="pww"><input id="${id}" type="password" ${extra}><button type="button" class="eye" data-eye="${id}" aria-label="Mostrar contraseña" aria-pressed="false">${eyeOn}</button></div>`;
 const demoBar = () => DEMO ? `<div class="demo">Modo demo: los datos viven solo en este navegador. <button class="btn ghost small" data-act="reset" style="min-height:32px;margin-left:6px">Reiniciar demo</button></div>` : '';
 const statusChip = l => isOverdue(l) ? `<span class="status s-vencido">Vencido</span>` :
   `<span class="status s-${l.status}">${{ pendiente: 'En evaluación', depositado: 'Depositado', rechazado: 'Rechazado', pagado: 'Pagado' }[l.status]}</span>`;
@@ -238,7 +241,7 @@ function renderAuth() {
       <div class="row2"><div><label for="dni">DNI</label><input id="dni" inputmode="numeric" maxlength="8" required></div>
       <div><label for="ph">Celular</label><input id="ph" inputmode="tel" maxlength="9" required autocomplete="tel"></div></div>` : ''}
       <label for="em">Correo electrónico</label><input id="em" type="email" required autocomplete="email">
-      <label for="pw">Contraseña</label><input id="pw" type="password" required minlength="6" autocomplete="${reg ? 'new-password' : 'current-password'}">
+      <label for="pw">Contraseña</label>${pwField('pw', `required minlength="6" autocomplete="${reg ? 'new-password' : 'current-password'}"`)}
       ${reg ? `<label style="display:flex;gap:10px;align-items:flex-start;font-weight:400"><input id="tc" type="checkbox" style="width:22px;min-height:22px;margin-top:2px"> Acepto el tratamiento de mis datos personales (Ley 29733) para evaluar mi solicitud.</label>` : ''}
       <p class="err" id="aerr"></p>
       <button class="btn block" id="asub">${reg ? 'Crear mi cuenta' : 'Ingresar'}</button>
@@ -556,7 +559,7 @@ function openForgot() {
 }
 function openNewPassword() {
   sheet(`<div class="head"><h2>Nueva contraseña</h2></div><form id="npf" novalidate><label for="np">Escribe tu nueva contraseña</label>
-    <input id="np" type="password" minlength="6" required><p class="err" id="nperr"></p><button class="btn block">Guardar</button></form>`, bg => {
+    ${pwField('np', 'minlength="6" required autocomplete="new-password"')}<p class="err" id="nperr"></p><button class="btn block">Guardar</button></form>`, bg => {
     $('#npf', bg).onsubmit = async e => { e.preventDefault(); const p = $('#np', bg).value;
       if (p.length < 6) { $('#nperr', bg).textContent = 'Mínimo 6 caracteres.'; return; }
       try { await api.updatePassword(p); closeSheet(); toast('Contraseña actualizada.'); } catch (x) { $('#nperr', bg).textContent = x.message; } };
@@ -572,6 +575,13 @@ function render() {
 }
 
 document.addEventListener('click', async e => {
+  const eye = e.target.closest('[data-eye]');
+  if (eye) {
+    const inp = document.getElementById(eye.dataset.eye), show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password'; eye.innerHTML = show ? eyeOff : eyeOn;
+    eye.setAttribute('aria-pressed', show); eye.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    inp.focus(); return;
+  }
   const t = e.target.closest('[data-act],[data-auth],[data-tab],[data-loan],[data-demo]');
   if (!t) return;
   if (t.dataset.auth) { S.authTab = t.dataset.auth; return renderAuth(); }
