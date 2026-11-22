@@ -28,7 +28,7 @@ const isOverdue = l => l.status === 'depositado' && l.due_date && l.due_date < t
    BACKEND 1: SUPABASE (producción)
    ================================================================= */
 function supabaseBackend() {
-  let sb, me = null;
+  let sb, me = null, authUser = null;
   const ready = new Promise((res, rej) => {
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js';
@@ -39,7 +39,8 @@ function supabaseBackend() {
   const chk = ({ data, error }) => { if (error) throw new Error(traducir(error.message)); return data; };
   const loadMe = async () => {
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) return (me = null);
+    if (!session) return (me = authUser = null);
+    authUser = session.user;
     me = chk(await sb.from('profiles').select('*').eq('id', session.user.id).single());
     return me;
   };
@@ -55,6 +56,8 @@ function supabaseBackend() {
     async signOut() { await ready; await sb.auth.signOut(); me = null; },
     async resetPassword(email) { await ready; chk(await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] })); },
     async updatePassword(password) { await ready; chk(await sb.auth.updateUser({ password })); },
+    getPin() { return authUser?.user_metadata?.pin || null; },
+    async setPin(pin) { const d = chk(await sb.auth.updateUser({ data: { pin } })); authUser = d.user; },
     async createLoan(v) { chk(await sb.from('loans').insert(v)); },
     async listLoans() {
       return chk(await sb.from('loans').select('*, payments(*), client:profiles(full_name,email,phone,dni)').order('created_at', { ascending: false }));
@@ -139,6 +142,8 @@ function demoBackend() {
     async signOut() { setS(null); },
     async resetPassword() { throw new Error('En modo demo no se envían correos.'); },
     async updatePassword() {},
+    getPin() { return meU()?.pin || null; },
+    async setPin(pin) { load(); db.users.find(u => u.id === getS()).pin = pin; save(); },
     async createLoan(v) {
       await wait(); const me = meU(); const id = ++db.seq;
       db.loans.push({ id, client_id: me.id, ...v, status: 'pendiente', created_at: new Date().toISOString() });
@@ -271,13 +276,16 @@ function renderAuth() {
         me = await api.signUp({ email, password, full_name, dni, phone });
         if (me && me.needsConfirm) { S.authTab = 'login'; renderAuth(); toast('Te enviamos un correo para confirmar tu cuenta.'); return; }
       } else me = await api.signIn(email, password);
-      await enter(me);
+      await enter(me, true);
     } catch (x) { err.textContent = x.message; $('#asub').disabled = false; }
   });
 }
 
-async function enter(me) {
+async function enter(me, viaPassword = false) {
   S.me = me; S.tab = 'pendientes';
+  const pin = api.getPin();
+  if (!pin || (viaPassword && store.get('amp_pin_reset'))) { if (!(await pinScreen('create'))) return; }
+  else if (!viaPassword) { if (!(await pinScreen('unlock'))) return; }
   await refresh(); subscribe(); askOsPermission();
 }
 
@@ -328,7 +336,8 @@ function renderClient() {
       ${S.loans.length ? `<ul class="list" style="margin-top:8px">${S.loans.map(l => `<li class="item" data-loan="${l.id}" tabindex="0">
         <div><div class="who">Crédito #${l.id}</div><div class="sub">${fdate(l.created_at)} · ${l.term_days || l.requested_days} días</div></div>
         <div style="text-align:right"><div class="amt">${money(l.approved_amount || l.requested_amount)}</div>${statusChip(l)}</div></li>`).join('')}</ul>`
-      : `<p class="empty">Aún no tienes créditos.</p>`}</div></main>`;
+      : `<p class="empty">Aún no tienes créditos.</p>`}</div>
+    <p style="text-align:center;margin:20px 0 0"><a href="#" data-act="pinchange">Cambiar mi clave de internet</a></p></main>`;
 }
 
 function openRequest() {
@@ -410,7 +419,8 @@ function renderAdmin() {
       <div class="stat"><div class="k">Intereses (activos + pagados)</div><div class="v">${money(ganado)}</div></div>
       <div class="stat"><div class="k">Vencidos</div><div class="v" style="color:${venc ? 'var(--bad)' : 'inherit'}">${venc}</div></div></div>
     <div class="tabs" role="tablist">${tabs.map(([k, t]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab === k}">${t}</button>`).join('')}</div>
-    <div class="card" style="margin-top:8px">${body}</div></main>`;
+    <div class="card" style="margin-top:8px">${body}</div>
+    <p style="text-align:center;margin:20px 0 0"><a href="#" data-act="pinchange">Cambiar mi clave de internet</a></p></main>`;
 }
 
 function openEvaluate(l) {
@@ -519,6 +529,85 @@ function openNotes() {
   if (S.notes.some(n => !n.read)) api.markAllRead().then(() => { S.notes.forEach(n => n.read = true); const b = $('.top .badge'); b && b.remove(); }).catch(() => {});
 }
 
+/* ---------- Clave de internet (6 dígitos) ---------- */
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+};
+async function hashPin(pin, salt) {
+  const txt = salt + ':' + pin;
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch { let h = 5381; for (const c of txt) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0; return 'x' + h.toString(16); }
+}
+let locked = false, hiddenAt = 0;
+const MAX_FAILS = 5;
+function pinScreen(mode, cancellable = false) {
+  return new Promise(resolve => {
+    locked = true; closeSheet(); $('#pinov')?.remove();
+    let buf = '', first = null, busy = false;
+    const ov = document.createElement('div'); ov.className = 'pin'; ov.id = 'pinov';
+    ov.innerHTML = `<div class="pinbox" role="dialog" aria-modal="true" aria-labelledby="pint">${logo}<h2 id="pint"></h2><p id="pins"></p>
+      <div class="dots" id="pind"></div><p class="err" id="pine" role="alert"></p>
+      <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-k="${n}">${n}</button>`).join('')}<span></span>
+        <button type="button" data-k="0">0</button><button type="button" data-k="del" aria-label="Borrar">⌫</button></div>
+      <div class="pinlinks">${mode === 'unlock' ? '<button type="button" data-p="forgot">Olvidé mi clave</button>'
+        : cancellable ? '<button type="button" data-p="cancel">Cancelar</button>' : '<button type="button" data-p="exit">Salir</button>'}</div></div>`;
+    const err = m => $('#pine', ov).textContent = m;
+    const paint = () => {
+      $('#pint', ov).textContent = mode === 'unlock' ? 'Hola, ' + (S.me.full_name || S.me.email).split(' ')[0] : first === null ? 'Crea tu clave de internet' : 'Repite tu clave';
+      $('#pins', ov).textContent = mode === 'unlock' ? 'Ingresa tu clave de internet de 6 dígitos.' : first === null ? 'Elige 6 dígitos. Te la pediremos cada vez que abras la app.' : 'Escríbela otra vez para confirmar.';
+      $('#pind', ov).innerHTML = [0, 1, 2, 3, 4, 5].map(i => `<i class="${i < buf.length ? 'on' : ''}"></i>`).join('');
+    };
+    const done = v => { document.removeEventListener('keydown', onKey, true); ov.remove(); locked = false; hiddenAt = 0; resolve(v); };
+    const out = async msg => { S.unsub && S.unsub(); try { await api.signOut(); } catch {} S.me = null; S.authTab = 'login'; done(false); render(); msg && toast(msg); };
+    const submit = async () => {
+      if (busy) return; busy = true;
+      try {
+        if (mode === 'unlock') {
+          const pin = api.getPin();
+          if (pin && await hashPin(buf, pin.s) === pin.h) { store.set('amp_pin_fails', null); return done(true); }
+          const fails = (+store.get('amp_pin_fails') || 0) + 1; store.set('amp_pin_fails', fails); buf = '';
+          if (fails >= MAX_FAILS) { store.set('amp_pin_fails', null); store.set('amp_pin_reset', '1'); return out('Demasiados intentos. Ingresa con tu correo y contraseña.'); }
+          err(`Clave incorrecta. Te quedan ${MAX_FAILS - fails} intento${MAX_FAILS - fails === 1 ? '' : 's'}.`);
+        } else if (first === null) {
+          if (/^(\d)\1{5}$/.test(buf) || buf === '123456' || buf === '654321') err('Elige una clave menos fácil de adivinar.'); else first = buf;
+          buf = '';
+        } else if (buf !== first) { first = null; buf = ''; err('Las claves no coinciden. Empieza de nuevo.'); }
+        else {
+          const s = Math.random().toString(36).slice(2) + Date.now().toString(36);
+          await api.setPin({ s, h: await hashPin(buf, s) });
+          store.set('amp_pin_reset', null); store.set('amp_pin_fails', null); done(true); toast('Clave de internet guardada.'); return;
+        }
+      } catch (x) { first = null; buf = ''; err(x.message); }
+      busy = false; paint();
+    };
+    const press = k => {
+      if (busy) return;
+      if (k === 'del') buf = buf.slice(0, -1); else if (buf.length < 6) { buf += k; if (buf.length === 1) err(''); }
+      paint(); if (buf.length === 6) setTimeout(submit, 120);
+    };
+    const onKey = e => { if (/^\d$/.test(e.key)) { e.preventDefault(); press(e.key); } else if (e.key === 'Backspace') { e.preventDefault(); press('del'); } };
+    ov.addEventListener('click', e => {
+      const k = e.target.closest('[data-k]'), p = e.target.closest('[data-p]');
+      if (k) return press(k.dataset.k);
+      if (!p) return;
+      if (p.dataset.p === 'cancel') return done(null);
+      if (p.dataset.p === 'forgot') { store.set('amp_pin_reset', '1'); return out('Ingresa con tu correo y contraseña para crear una nueva clave.'); }
+      out();
+    });
+    document.addEventListener('keydown', onKey, true);
+    document.body.appendChild(ov); paint();
+  });
+}
+// Volver a pedir la clave si la app estuvo en segundo plano más de 1 minuto
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (!hiddenAt) hiddenAt = Date.now(); return; }
+  const away = hiddenAt ? Date.now() - hiddenAt : 0; hiddenAt = 0;
+  if (away > 60000 && S.me && !locked && api.getPin()) pinScreen('unlock');
+});
+
 /* ---------- Instalar la app en el celular ---------- */
 let deferredInstall = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; });
@@ -586,12 +675,13 @@ document.addEventListener('click', async e => {
   if (!t) return;
   if (t.dataset.auth) { S.authTab = t.dataset.auth; return renderAuth(); }
   if (t.dataset.tab) { S.tab = t.dataset.tab; return renderAdmin(); }
-  if (t.dataset.demo) { const [u, p] = t.dataset.demo.split('|'); try { await enter(await api.signIn(u, p)); } catch (x) { toast(x.message); } return; }
+  if (t.dataset.demo) { const [u, p] = t.dataset.demo.split('|'); try { await enter(await api.signIn(u, p), true); } catch (x) { toast(x.message); } return; }
   if (t.dataset.loan) { const l = S.loans.find(x => String(x.id) === t.dataset.loan); if (l) { closeSheet(); openLoan(l); } return; }
   const a = t.dataset.act;
   if (a === 'request') openRequest();
   if (a === 'notes') openNotes();
   if (a === 'install') openInstall();
+  if (a === 'pinchange') { e.preventDefault(); pinScreen('create', true); }
   if (a === 'forgot') { e.preventDefault(); openForgot(); }
   if (a === 'perm') { askOsPermission(); closeSheet(); }
   if (a === 'logout') { document.querySelectorAll('.toast').forEach(x => x.remove()); S.unsub && S.unsub(); await api.signOut(); S.me = null; S.authTab = 'login'; render(); }

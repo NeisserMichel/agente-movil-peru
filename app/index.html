@@ -93,6 +93,15 @@ textarea{min-height:80px;resize:vertical}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;z-index:30;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:up .25s ease}
 @keyframes up{from{transform:translate(-50%,20px);opacity:0}}
 @media(prefers-reduced-motion:reduce){.toast{animation:none}}
+.pin{position:fixed;inset:0;z-index:40;background:var(--y);color:#17201a;display:grid;place-items:center;overflow:auto;padding:20px}
+.pinbox{width:min(340px,100%);text-align:center}.pinbox img{width:200px;height:auto;margin:0 auto 20px;display:block}
+.pinbox p{margin:6px 0 0}
+.dots{display:flex;justify-content:center;gap:14px;margin:22px 0 6px}.dots i{width:16px;height:16px;border-radius:50%;border:2px solid #17201a}.dots i.on{background:#17201a}
+.pin .err{color:#8f1410;font-weight:600;min-height:1.6em;margin:6px 0}
+.keys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.keys button{height:64px;border-radius:18px;border:0;background:#fff;color:#17201a;font:700 26px Archivo,sans-serif;cursor:pointer}
+.keys button:active{background:var(--gd);color:#fff}.keys button:focus-visible,.pinlinks button:focus-visible{outline:3px solid var(--bd);outline-offset:2px}
+.pinlinks button{margin-top:16px;min-height:44px;padding:0 12px;background:none;border:0;text-decoration:underline;font-weight:600;color:#17201a;cursor:pointer}
 .demo{background:var(--warnbg);color:var(--warn);font-size:13px;padding:8px 16px;text-align:center}
 .auth-hero{background:var(--y);color:#17201a;padding:36px 20px 70px;text-align:center}
 .auth-hero img{width:min(330px,82vw);height:auto;display:block;margin:0 auto}
