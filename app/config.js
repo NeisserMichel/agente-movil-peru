@@ -6,8 +6,8 @@
 //  Supabase > Project Settings > API
 // =============================================================
 window.AMP_CONFIG = {
-  SUPABASE_URL: '',          // ej. 'https://abcdxyz.supabase.co'
-  SUPABASE_ANON_KEY: '',     // la clave "anon public"
+  SUPABASE_URL: 'https://efahaofcmadteqtkssuz.supabase.co',          // ej. 'https://abcdxyz.supabase.co'
+  SUPABASE_ANON_KEY: 'sb_publishable_trMnEFsNRUPBXwel83Lmww_Loeimds6',     // la clave "anon public"
 
   EMPRESA: 'Agente Móvil Perú',
   WHATSAPP: '51999999999',   // tu número con 51 delante, sin espacios
