@@ -208,6 +208,7 @@ function askOsPermission() {
 
 const logo = `<img src="logo.png" alt="Agente Móvil">`;
 const bell = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>`;
+const loopI = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.640-6.360"/><path d="M21 3v6h-6"/></svg>`;
 const exitI = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>`;
 const eyeOn = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>`;
 const eyeOff = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4M6.5 6.6C3.7 8.500 2 12 2 12s3.6 7 10 7c1.700 0 3.200-.5 4.500-1.200M9.900 9.900a3 3 0 0 0 4.200 4.200"/></svg>`;
@@ -285,7 +286,8 @@ async function enter(me, viaPassword = false) {
   S.me = me; S.tab = 'pendientes';
   const pin = api.getPin();
   if (!pin || (viaPassword && store.get('amp_pin_reset'))) { if (!(await pinScreen('create'))) return; }
-  else if (!viaPassword) { if (!(await pinScreen('unlock'))) return; }
+  else if (!viaPassword && idleTooLong()) { if (!(await pinScreen('unlock'))) return; }
+  touch();
   await refresh(); subscribe(); askOsPermission();
 }
 
@@ -296,7 +298,7 @@ function header(sub) {
   const unread = S.notes.filter(n => !n.read).length;
   return `${demoBar()}<header class="top"><div class="row">
     <div class="brand">${logo}</div>
-    <div style="display:flex;gap:8px"><button class="iconbtn" data-act="notes" aria-label="Notificaciones">${bell}${unread ? `<span class="badge">${unread}</span>` : ''}</button>
+    <div style="display:flex;gap:8px"><button class="iconbtn" data-act="reload" aria-label="Actualizar">${loopI}</button><button class="iconbtn" data-act="notes" aria-label="Notificaciones">${bell}${unread ? `<span class="badge">${unread}</span>` : ''}</button>
     <button class="iconbtn" data-act="logout" aria-label="Cerrar sesión">${exitI}</button></div></div>
     <div class="hello"><h1>Hola, ${esc((S.me.full_name || S.me.email).split(' ')[0])}</h1><p>${sub}</p></div></header>`;
 }
@@ -542,6 +544,10 @@ async function hashPin(pin, salt) {
   } catch { let h = 5381; for (const c of txt) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0; return 'x' + h.toString(16); }
 }
 let locked = false, hiddenAt = 0;
+const LOCK_MS = 5 * 60 * 1000;   // pedir la clave tras 5 minutos sin usar la app
+function touch() { store.set('amp_last_active', Date.now()); }
+function idleTooLong() { return Date.now() - (+store.get('amp_last_active') || 0) > LOCK_MS; }
+setInterval(() => { if (S.me && !locked && !document.hidden) touch(); }, 15000);
 const MAX_FAILS = 5;
 function pinScreen(mode, cancellable = false) {
   return new Promise(resolve => {
@@ -557,10 +563,10 @@ function pinScreen(mode, cancellable = false) {
     const err = m => $('#pine', ov).textContent = m;
     const paint = () => {
       $('#pint', ov).textContent = mode === 'unlock' ? 'Hola, ' + (S.me.full_name || S.me.email).split(' ')[0] : first === null ? 'Crea tu clave de internet' : 'Repite tu clave';
-      $('#pins', ov).textContent = mode === 'unlock' ? 'Ingresa tu clave de internet de 6 dígitos.' : first === null ? 'Elige 6 dígitos. Te la pediremos cada vez que abras la app.' : 'Escríbela otra vez para confirmar.';
+      $('#pins', ov).textContent = mode === 'unlock' ? 'Ingresa tu clave de internet de 6 dígitos.' : first === null ? 'Elige 6 dígitos. Te la pediremos al abrir la app si pasaron más de 5 minutos.' : 'Escríbela otra vez para confirmar.';
       $('#pind', ov).innerHTML = [0, 1, 2, 3, 4, 5].map(i => `<i class="${i < buf.length ? 'on' : ''}"></i>`).join('');
     };
-    const done = v => { document.removeEventListener('keydown', onKey, true); ov.remove(); locked = false; hiddenAt = 0; resolve(v); };
+    const done = v => { document.removeEventListener('keydown', onKey, true); ov.remove(); locked = false; if (v) touch(); resolve(v); };
     const out = async msg => { S.unsub && S.unsub(); try { await api.signOut(); } catch {} S.me = null; S.authTab = 'login'; done(false); render(); msg && toast(msg); };
     const submit = async () => {
       if (busy) return; busy = true;
@@ -601,11 +607,11 @@ function pinScreen(mode, cancellable = false) {
     document.body.appendChild(ov); paint();
   });
 }
-// Volver a pedir la clave si la app estuvo en segundo plano más de 1 minuto
+// Al volver a la app: pedir la clave si pasaron más de 5 minutos; si no, actualizar los datos
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { if (!hiddenAt) hiddenAt = Date.now(); return; }
-  const away = hiddenAt ? Date.now() - hiddenAt : 0; hiddenAt = 0;
-  if (away > 60000 && S.me && !locked && api.getPin()) pinScreen('unlock');
+  if (document.hidden) { if (S.me && !locked) touch(); return; }
+  if (!S.me || locked) return;
+  if (api.getPin() && idleTooLong()) pinScreen('unlock'); else { touch(); refresh().catch(() => {}); }
 });
 
 /* ---------- Instalar la app en el celular ---------- */
@@ -679,6 +685,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.loan) { const l = S.loans.find(x => String(x.id) === t.dataset.loan); if (l) { closeSheet(); openLoan(l); } return; }
   const a = t.dataset.act;
   if (a === 'request') openRequest();
+  if (a === 'reload') { t.classList.add('spin'); touch(); location.reload(); return; }
   if (a === 'notes') openNotes();
   if (a === 'install') openInstall();
   if (a === 'pinchange') { e.preventDefault(); pinScreen('create', true); }

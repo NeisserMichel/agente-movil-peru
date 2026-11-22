@@ -37,6 +37,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .brand img{height:40px;width:auto;display:block}
 .iconbtn{position:relative;width:44px;height:44px;border-radius:50%;border:0;background:rgba(0,0,0,.08);color:#17201a;display:grid;place-items:center;cursor:pointer}
 .iconbtn svg{width:22px;height:22px}
+.iconbtn.spin svg{animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.brand img{max-width:42vw;height:auto;max-height:40px}
 .badge{position:absolute;top:4px;right:4px;min-width:18px;height:18px;border-radius:9px;background:var(--gd);color:#fff;box-shadow:0 0 0 2px #fff;font:700 11px/18px Inter;text-align:center;padding:0 4px}
 .hello{margin-top:16px}.hello p{margin:4px 0 0;opacity:.85}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:14px}
