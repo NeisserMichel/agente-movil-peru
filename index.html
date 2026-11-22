@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Agente Móvil Perú: préstamos rápidos desde tu celular. Solicita, recibe la respuesta en la app y paga por Yape, Plin o transferencia.">
+<meta name="theme-color" content="#fdc202">
+<title>Agente Móvil Perú</title>
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,600..900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: cercano y confiable, como el agente de la esquina que te conoce
+   IDEA: la constancia de depósito que llega al celular, sobre los cerros del Perú
+   PICTURE: escena ilustrada: cerros celestes y verdes, sol blanco y un celular con el voucher "Depositado"
+   COLOUR and TYPE: marca Agente Móvil: amarillo #FDC202 de borde a borde, verde #00922E, celeste #009DF5, contorno blanco; Archivo condensada + Inter
+   LAYOUT: héroe rojo con texto y escena; pasos; simulador vivo; requisitos; preguntas; contacto; pie con Libro de Reclamaciones */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#111312);--soft:light-dark(#fbf6e3,#1a1d1b);--ink:light-dark(#17201a,#f1f4ef);
+  --mute:light-dark(#62595c,#aaa0a4);--line:light-dark(#e8e1e2,#332d30);--y:#fdc202;--g:#00922e;--gd:#007a26;--gdd:#005c1d;--b:#009df5;--bd:#0070b0;--sun:#fdc202;--card:light-dark(#fff,#1b1e1c)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Archivo,Inter,sans-serif;font-stretch:78%;font-weight:800;line-height:1.05;margin:0;text-wrap:balance}
+h2{font-size:clamp(28px,4vw,40px)}h3{font-size:19px}
+a{color:inherit}
+.in{max-width:1180px;margin:0 auto}
+.band{padding:clamp(40px,6vw,88px) max(5vw,16px)}
+nav{position:sticky;top:0;z-index:10;background:var(--y);color:#17201a;box-shadow:0 1px 0 rgba(0,0,0,.08);padding:10px max(5vw,16px)}
+nav .in{display:flex;align-items:center;gap:18px;justify-content:space-between;flex-wrap:wrap}
+.brand{display:flex;align-items:center;text-decoration:none}
+.brand img{height:44px;width:auto;display:block}
+.links{display:flex;gap:4px;flex-wrap:wrap}.links a{padding:10px 12px;border-radius:10px;text-decoration:none;font-weight:500;opacity:.92}.links a:hover{background:rgba(0,0,0,.07)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border-radius:14px;font-weight:600;text-decoration:none;border:0;cursor:pointer;font-size:16px}
+.btn.sun{background:var(--gd);color:#fff}.btn.white{background:var(--gd);color:#fff;box-shadow:0 0 0 3px #fff}.btn.line{border:2px solid #17201a;color:#17201a}
+.btn.red{background:var(--gd);color:#fff}.btn.light{background:#fff;color:var(--gdd)}.btn.blue{background:var(--b);color:#062a40}
+.btn:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--bd);outline-offset:2px}
+@media(max-width:860px){.links{display:none}}
+/* Héroe */
+.hero{background:var(--y);color:#17201a;padding-bottom:0;overflow:hidden}
+.hero .in{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(20px,4vw,48px);align-items:end}
+.hero h1{font-size:clamp(44px,7vw,72px);font-weight:900;line-height:.98}
+.hero p.lead{font-size:clamp(17px,2vw,20px);max-width:34ch;opacity:.95;margin:18px 0 26px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero .copy{padding-bottom:clamp(40px,6vw,88px)}
+.facts{display:flex;gap:26px;flex-wrap:wrap;margin-top:30px}.facts b{display:block;font:700 26px Archivo,sans-serif;font-stretch:78%}.facts span{font-size:14px;opacity:.85}
+.scene{width:100%;height:auto;display:block}
+@media(max-width:800px){.hero .in{grid-template-columns:minmax(0,1fr)}.hero .copy{padding-bottom:0}}
+/* Pasos */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:30px}
+.step{background:var(--soft);border-radius:20px;padding:24px}
+.step .n{width:44px;height:44px;border-radius:50%;background:var(--g);color:#fff;box-shadow:0 0 0 3px #fff;display:grid;place-items:center;font:700 20px Archivo,sans-serif;font-stretch:78%;margin-bottom:14px}
+.step p{margin:8px 0 0;color:var(--mute)}
+@media(max-width:760px){.steps{grid-template-columns:minmax(0,1fr)}}
+.sub{color:var(--mute);max-width:60ch;margin:12px 0 0;font-size:17px}
+/* Simulador */
+.simband{background:var(--soft)}
+.sim{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin-top:30px;align-items:stretch}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px}
+label{display:block;font-weight:600;margin:6px 0 8px}
+.val{font:700 34px Archivo,sans-serif;font-stretch:78%;margin-bottom:6px}
+input[type=range]{width:100%;accent-color:var(--g);height:32px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chip{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:500 15px Inter}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.result{background:var(--gd);color:#fff;border-radius:22px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;gap:18px}
+.result .big{font:800 clamp(40px,7vw,60px)/1 Archivo,sans-serif;font-stretch:78%;white-space:nowrap}
+.rl{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.25)}.rl b{white-space:nowrap}
+.small{font-size:13px;opacity:.85}
+@media(max-width:760px){.sim{grid-template-columns:minmax(0,1fr)}}
+/* Requisitos */
+.req{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:28px}
+.req div{border-top:5px solid var(--g);padding-top:14px}.req p{margin:6px 0 0;color:var(--mute)}.req div:nth-child(even){border-color:var(--b)}
+@media(max-width:860px){.req{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.req{grid-template-columns:minmax(0,1fr)}}
+/* FAQ */
+.faq{max-width:780px;margin-top:24px}
+details{border-bottom:1px solid var(--line);padding:4px 0}
+summary{cursor:pointer;font:600 18px Archivo,sans-serif;font-stretch:78%;padding:16px 0;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::after{content:"+";font-size:24px;line-height:1;color:var(--g)}details[open] summary::after{content:"–"}
+details p{margin:0 0 16px;color:var(--mute)}
+/* Contacto */
+.contact{background:var(--ink);color:var(--bg)}
+.contact .in{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:30px;align-items:center}
+.contact .sub{color:inherit;opacity:.75}
+.cinfo{display:grid;gap:12px}.cinfo div{background:rgba(127,127,127,.14);border-radius:16px;padding:16px 18px}.cinfo b{display:block;font:600 18px Archivo,sans-serif;font-stretch:78%}
+@media(max-width:760px){.contact .in{grid-template-columns:minmax(0,1fr)}}
+footer{background:var(--gdd);color:#fff;padding:28px max(5vw,16px);font-size:14px}
+footer{border-top:8px solid;border-image:linear-gradient(90deg,var(--g) 0 58%,var(--b) 58%) 1}
+footer .in{display:flex;flex-wrap:wrap;gap:18px;justify-content:space-between;align-items:center}
+footer .fl{display:flex;gap:16px;flex-wrap:wrap}
+.book{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--gdd);padding:10px 14px;border-radius:12px;font-weight:600;text-decoration:none}
+.dl{background:var(--y);color:#17201a}
+.dl .in{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:center}
+.dl img{width:clamp(96px,14vw,150px);height:auto;border-radius:26%;box-shadow:0 0 0 5px #fff,0 14px 30px -12px rgba(0,0,0,.4)}
+.dl p{max-width:56ch;margin:12px 0 20px;font-size:17px}
+.how{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}
+.how div{background:rgba(255,255,255,.55);border-radius:16px;padding:14px 16px;font-size:15px}.how b{display:block;margin-bottom:4px}
+@media(max-width:640px){.dl .in,.how{grid-template-columns:minmax(0,1fr)}}
+.sample{font-size:13px;opacity:.7;margin-top:10px}
+.float{position:fixed;right:18px;bottom:18px;z-index:20;width:58px;height:58px;border-radius:50%;background:#25d366;display:grid;place-items:center;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.float svg{width:30px;height:30px}
+@media(prefers-reduced-motion:no-preference){.sunrise{animation:rise 1.6s ease-out both}@keyframes rise{from{transform:translateY(40px)}}}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+</style>
+</head>
+<body>
+<nav aria-label="Principal"><div class="in">
+  <a class="brand" href="#inicio"><img src="logo.png" alt="Agente Móvil Perú"></a>
+  <div class="links"><a href="#como">Cómo funciona</a><a href="#simulador">Simulador</a><a href="#requisitos">Requisitos</a><a href="#descargar">Descargar app</a><a href="#preguntas">Preguntas</a><a href="#contacto">Contacto</a></div>
+  <a class="btn sun" href="app/index.html" style="min-height:44px">Ingresar a la app</a>
+</div></nav>
+
+<header class="band hero" id="inicio"><div class="in">
+  <div class="copy">
+    <h1>Tu préstamo, directo a tu celular</h1>
+    <p class="lead">Regístrate con tu correo, pide el monto que necesitas y recibe la aprobación y el depósito en la misma app.</p>
+    <div class="cta"><a class="btn white" href="app/index.html">Solicitar mi crédito</a><a class="btn line" href="#descargar">Descargar la app</a></div>
+    <div class="facts"><div><b>S/ 100 – 5,000</b><span>montos disponibles</span></div><div><b>7 a 60 días</b><span>plazos flexibles</span></div><div><b>Yape · Plin</b><span>depósito y pago</span></div></div>
+  </div>
+  <svg class="scene" viewBox="0 0 560 460" role="img" aria-label="Celular mostrando un crédito depositado, con cerros y el sol de fondo">
+    <defs>
+      <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3fb8ff"/><stop offset="1" stop-color="#009df5"/></linearGradient>
+      <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00a835"/><stop offset="1" stop-color="#007a26"/></linearGradient>
+      <linearGradient id="ph" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2326"/><stop offset="1" stop-color="#151112"/></linearGradient>
+      <radialGradient id="sg"><stop offset="0" stop-color="#fffbe8"/><stop offset="1" stop-color="#fff1b0"/></radialGradient>
+    </defs>
+    <g class="sunrise"><circle cx="400" cy="150" r="92" fill="#fff" opacity=".35"/><circle cx="400" cy="150" r="66" fill="url(#sg)"/></g>
+    <path d="M0 330 90 230l60 50 90-120 80 90 70-60 90 80 80-40v230H0Z" fill="url(#m1)"/>
+    <path d="M240 160l26 30-16-4-10 14-12-14-14 4Z" fill="#fff" opacity=".85"/>
+    <path d="M0 380 120 300l70 40 110-90 100 80 80-30 80 50v110H0Z" fill="url(#m2)"/>
+    <ellipse cx="250" cy="452" rx="130" ry="10" fill="#000" opacity=".18"/>
+    <g transform="rotate(-6 250 270)">
+      <rect x="160" y="96" width="190" height="356" rx="30" fill="url(#ph)"/>
+      <rect x="170" y="106" width="170" height="336" rx="22" fill="#fff"/>
+      <rect x="225" y="114" width="60" height="8" rx="4" fill="#e8e1e2"/>
+      <rect x="170" y="130" width="170" height="74" fill="#fdc202"/>
+      <text x="184" y="160" font-family="Archivo,sans-serif" font-size="13" fill="#17201a" opacity=".8">Hola, María</text>
+      <text x="184" y="186" font-family="Archivo,sans-serif" font-size="17" font-weight="800" fill="#17201a">Tu crédito activo</text>
+      <rect x="182" y="214" width="146" height="150" rx="14" fill="#fff" stroke="#e8e1e2"/>
+      <rect x="182" y="214" width="85" height="5" fill="#00922e"/><rect x="267" y="214" width="61" height="5" fill="#009df5"/>
+      <text x="194" y="242" font-family="Inter,sans-serif" font-size="10" fill="#6b6265">Depositado</text>
+      <text x="194" y="272" font-family="Archivo,sans-serif" font-size="27" font-weight="700" fill="#1a1517">S/ 1,500</text>
+      <g transform="rotate(10 290 240)"><rect x="262" y="226" width="58" height="20" rx="5" fill="none" stroke="#127a4b" stroke-width="2"/><text x="291" y="240" text-anchor="middle" font-family="Archivo,sans-serif" font-size="9" font-weight="700" fill="#127a4b">APROBADO</text></g>
+      <rect x="194" y="290" width="122" height="7" rx="3.5" fill="#e8e1e2"/><rect x="194" y="290" width="40" height="7" rx="3.5" fill="#127a4b"/>
+      <text x="194" y="320" font-family="Inter,sans-serif" font-size="10" fill="#6b6265">Vence en 30 días</text>
+      <text x="194" y="346" font-family="Archivo,sans-serif" font-size="13" font-weight="600" fill="#1a1517">Total S/ 1,590</text>
+      <rect x="182" y="380" width="146" height="40" rx="12" fill="#007a26"/>
+      <text x="255" y="405" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#fff">Coordinar pago</text>
+    </g>
+    <g transform="translate(372 300)"><rect width="150" height="58" rx="16" fill="#fff"/><circle cx="26" cy="29" r="13" fill="#00922e"/>
+      <path d="M20 29l4 4 8-8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <text x="48" y="25" font-family="Archivo,sans-serif" font-size="12" font-weight="700" fill="#1a1517">¡Depositado!</text>
+      <text x="48" y="41" font-family="Inter,sans-serif" font-size="10" fill="#6b6265">Revisa tu Yape</text></g>
+  </svg>
+</div></header>
+
+<section class="band" id="como"><div class="in">
+  <h2>Cómo funciona</h2>
+  <p class="sub">Todo pasa en la app: no tienes que ir a ninguna oficina ni llenar papeles.</p>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Crea tu cuenta</h3><p>Regístrate con tu correo, una contraseña, tu DNI y tu celular. Toma menos de un minuto.</p></div>
+    <div class="step"><div class="n">2</div><h3>Solicita tu crédito</h3><p>Elige cuánto necesitas y en cuántos días lo pagarás. Recibimos tu solicitud al instante.</p></div>
+    <div class="step"><div class="n">3</div><h3>Recibe tu depósito</h3><p>Al aprobarlo te llega el aviso en la app con el monto, la fecha de pago y el total a pagar.</p></div>
+  </div>
+</div></section>
+
+<section class="band simband" id="simulador"><div class="in">
+  <h2>Simula tu crédito</h2>
+  <p class="sub">Calcula cuánto pagarías. El monto y la tasa final te los confirmamos al aprobar tu solicitud.</p>
+  <div class="sim">
+    <div class="panel">
+      <label for="amt">Monto</label><div class="val" id="amtv">S/ 1,000.00</div>
+      <input id="amt" type="range" min="100" max="5000" step="50" value="1000">
+      <label style="margin-top:18px">Plazo</label>
+      <div class="chips" id="days"></div>
+      <label style="margin-top:18px">Tasa de interés diaria</label>
+      <div class="chips" id="rates"></div>
+    </div>
+    <div class="result" aria-live="polite">
+      <div><div class="small">Total a pagar</div><div class="big" id="tot">S/ 1,060.00</div><div class="small" id="due"></div></div>
+      <div><div class="rl"><span>Monto recibido</span><b id="r1"></b></div><div class="rl"><span>Interés</span><b id="r2"></b></div><div class="rl"><span>Tasa efectiva anual (TEA)</span><b id="r3"></b></div></div>
+      <a class="btn light" href="app/index.html">Solicitar este crédito</a>
+    </div>
+  </div>
+  <p class="sample">Cálculo referencial con interés simple diario. Sin comisiones ocultas.</p>
+</div></section>
+
+<section class="band" id="requisitos"><div class="in">
+  <h2>Requisitos</h2>
+  <div class="req">
+    <div><h3>DNI vigente</h3><p>Ser peruano o residente con documento vigente.</p></div>
+    <div><h3>Mayor de 18 años</h3><p>La solicitud es personal y a tu nombre.</p></div>
+    <div><h3>Celular y correo</h3><p>Para crear tu cuenta y recibir los avisos de tu crédito.</p></div>
+    <div><h3>Yape, Plin o cuenta</h3><p>A tu nombre, para recibir el depósito y hacer tus pagos.</p></div>
+  </div>
+</div></section>
+
+<section class="band dl" id="descargar"><div class="in">
+  <img src="app/icon-512.png" alt="Ícono de la app Agente Móvil" width="150" height="150">
+  <div><h2>Descarga la app en tu celular</h2>
+    <p>Es gratis, pesa muy poco y no necesitas Play Store. Se instala directo desde aquí y queda con su ícono en tu pantalla de inicio.</p>
+    <a class="btn red" href="app/index.html#instalar">Descargar e instalar la app</a>
+    <div class="how"><div><b>Android (Chrome)</b>Toca el botón y luego “Instalar ahora”.</div>
+    <div><b>iPhone (Safari)</b>Toca el botón, luego Compartir y “Agregar a inicio”.</div></div></div>
+</div></section>
+
+<section class="band simband" id="preguntas"><div class="in">
+  <h2>Preguntas frecuentes</h2>
+  <div class="faq">
+    <details><summary>¿Cuánto demora la respuesta?</summary><p>Revisamos cada solicitud el mismo día hábil. Apenas la aprobamos y depositamos, te llega la notificación en la app.</p></details>
+    <details><summary>¿Cómo se calcula el interés?</summary><p>Es un interés simple diario sobre el monto prestado. Por ejemplo, S/ 1,000 a 30 días al 0.2% diario son S/ 60 de interés: pagarías S/ 1,060 en total.</p></details>
+    <details><summary>¿Puedo pagar antes o en partes?</summary><p>Sí. Puedes hacer abonos por Yape, Plin o transferencia. Cada pago se registra y verás tu saldo actualizado en la app.</p></details>
+    <details><summary>¿Puedo pedir otro crédito?</summary><p>Sí, cuando hayamos respondido tu solicitud actual. Los clientes puntuales acceden a montos mayores.</p></details>
+    <details><summary>¿Mis datos están seguros?</summary><p>Usamos tus datos solo para evaluar y gestionar tu crédito, conforme a la Ley N.º 29733 de Protección de Datos Personales.</p></details>
+  </div>
+</div></section>
+
+<section class="band contact" id="contacto"><div class="in">
+  <div><h2>¿Tienes dudas? Escríbenos</h2><p class="sub">Te atendemos por WhatsApp de lunes a sábado.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px"><a class="btn red" id="wa1" href="#" target="_blank" rel="noopener">Escribir por WhatsApp</a><a class="btn blue" href="app/index.html">Crear mi cuenta</a></div></div>
+  <div class="cinfo">
+    <div><span class="small">WhatsApp</span><b id="wat">+51 999 999 999</b></div>
+    <div><span class="small">Correo</span><b>contacto@agentemovilperu.pe</b></div>
+    <div><span class="small">Horario</span><b>Lun – Sáb · 9:00 a 19:00</b></div>
+    <p class="sample">Datos de contacto de ejemplo: reemplázalos por los tuyos.</p>
+  </div>
+</div></section>
+
+<footer><div class="in">
+  <div>© <span id="yr"></span> Agente Móvil Perú · RUC 20XXXXXXXXX · Lima, Perú</div>
+  <div class="fl"><a href="#preguntas">Términos y condiciones</a><a href="#preguntas">Política de privacidad</a>
+  <a class="book" href="#contacto"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4Z"/><path d="M8 9h8M8 13h6"/></svg>Libro de Reclamaciones</a></div>
+</div></footer>
+
+<a class="float" id="wa2" href="#" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg></a>
+
+<script>
+{
+  const WHATSAPP = '51999999999';           // ← tu número
+  const TASAS = [0.2, 0.3], PLAZOS = [7, 15, 30, 45, 60];
+  const money = n => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
+  let days = 30, rate = TASAS[0];
+  const $ = id => document.getElementById(id);
+  const chipRow = (el, vals, cur, fmt, set) => {
+    el.innerHTML = vals.map(v => `<button type="button" class="chip" data-v="${v}" aria-pressed="${v === cur}">${fmt(v)}</button>`).join('');
+    el.onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; set(+b.dataset.v);
+      el.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c === b)); upd(); };
+  };
+  const upd = () => {
+    const a = +$('amt').value, i = Math.round(a * rate / 100 * days * 100) / 100, tea = (Math.pow(1 + rate / 100 * days, 360 / days) - 1) * 100;
+    const d = new Date(); d.setDate(d.getDate() + days);
+    $('amtv').textContent = money(a); $('tot').textContent = money(a + i);
+    $('r1').textContent = money(a); $('r2').textContent = money(i); $('r3').textContent = tea.toFixed(1) + '%';
+    $('due').textContent = 'Pagarías hasta el ' + d.toLocaleDateString('es-PE', { day: 'numeric', month: 'long' });
+  };
+  chipRow($('days'), PLAZOS, days, v => v + ' días', v => days = v);
+  chipRow($('rates'), TASAS, rate, v => v + '%', v => rate = v);
+  $('amt').oninput = upd; upd();
+  const link = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent('Hola, quiero información sobre un préstamo con Agente Móvil Perú.');
+  $('wa1').href = link; $('wa2').href = link;
+  $('wat').textContent = '+' + WHATSAPP.replace(/^(\d{2})(\d{3})(\d{3})(\d{3})$/, '$1 $2 $3 $4');
+  $('yr').textContent = new Date().getFullYear();
+}
+</script>
+</body>
+</html>
