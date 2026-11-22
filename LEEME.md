@@ -14,14 +14,14 @@
 1. **El cliente** se registra con correo, contraseña, nombres, DNI y celular.
 2. Toca **Solicitar crédito**, elige monto y plazo y envía.
 3. **Tú (admin)** recibes al instante una notificación: *“María Quispe solicitó un préstamo por S/ 1,500.00 a 30 días”*.
-4. Abres la solicitud, ajustas **monto, interés diario (0.2% / 0.3% / otro), plazo y fecha** y ves en vivo el interés, el total a pagar, la fecha de vencimiento y la TEA equivalente.
+4. Abres la solicitud, ajustas **monto, interés diario (0.3% u otro), plazo y fecha** y ves en vivo el interés por día, el total al vencimiento y la fecha de pago.
 5. Tocas **Confirmar aprobación y depósito** y al cliente le aparece: *“¡Tu crédito fue aprobado y depositado!”*, con su saldo y fecha de pago.
 6. Registras los **pagos/abonos** (Yape, Plin, efectivo). Cuando el saldo llega a cero, el crédito pasa a **Pagado**.
 
 Además tienes un resumen (capital prestado, por cobrar, intereses, vencidos), una lista de clientes y recordatorios por WhatsApp con un toque.
 
-**Fórmula:** interés = monto × tasa diaria × días (interés simple).
-Ejemplo: S/ 1,000 × 0.2% × 30 días = S/ 60 → total S/ 1,060.
+**Fórmula:** interés = monto × 0.3% × días transcurridos (interés simple). La app muestra al cliente su deuda al día.
+Ejemplo: S/ 1,000 × 0.3% × 10 días = S/ 30 → total S/ 1,030.
 
 ---
 
@@ -73,5 +73,4 @@ Cuando la app te pregunte, acepta **“Permitir notificaciones”** para recibir
 - **Modo demo:** si `config.js` no tiene los datos de Supabase, la app funciona en modo demo (los datos se guardan solo en ese navegador). Sirve para probar. Usuarios de prueba: `admin@agentemovil.pe / admin123`, `maria@ejemplo.pe / cliente123`.
 - **Notificaciones:** llegan al instante mientras la app está abierta o en segundo plano reciente. Para avisos *push* con la app totalmente cerrada, el siguiente paso es integrar OneSignal o Firebase Cloud Messaging.
 - **Confirmación de correo:** Supabase pide por defecto que el cliente confirme su correo. Puedes desactivarlo en *Authentication → Providers → Email → Confirm email*.
-- **Tope de tasas (BCRP):** la app calcula la TEA equivalente y te avisa si pasa el tope configurado en `TASA_MAXIMA_TEA`. El tope de mayo–octubre 2026 fue **114.13% anual**. Se actualiza cada semestre (1 de mayo y 1 de noviembre), así que revisa el valor vigente en bcrp.gob.pe. Como referencia, a 30 días el **0.2% diario ≈ 101% TEA** y el **0.3% diario ≈ 181% TEA**.
 - **Formalidad en Perú:** si prestas dinero como negocio, consulta con un abogado o contador si debes inscribirte en algún registro de la SBS, el contrato o pagaré, el **Libro de Reclamaciones virtual** (obligatorio si tienes web) y tu política de privacidad (Ley 29733). Los enlaces del pie de página de la web ya están listos para que pongas los tuyos.
