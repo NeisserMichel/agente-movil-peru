@@ -16,12 +16,12 @@
 3. **Tú (admin)** recibes al instante una notificación: *“María Quispe solicitó un préstamo por S/ 1,500.00 a 30 días”*.
 4. Abres la solicitud, ajustas **monto, interés diario (0.3% u otro), plazo y fecha** y ves en vivo el interés por día, el total al vencimiento y la fecha de pago.
 5. Tocas **Confirmar aprobación y depósito** y al cliente le aparece: *“¡Tu crédito fue aprobado y depositado!”*, con su saldo y fecha de pago.
-6. Registras los **pagos/abonos** (Yape, Plin, efectivo). Cuando el saldo llega a cero, el crédito pasa a **Pagado**.
+6. Registras el **pago total** (Yape, transferencia, efectivo) y el crédito pasa a **Pagado**.
 
 Además tienes un resumen (capital prestado, por cobrar, intereses, vencidos), una lista de clientes y recordatorios por WhatsApp con un toque.
 
-**Fórmula:** interés = monto × 0.3% × días transcurridos (interés simple). La app muestra al cliente su deuda al día.
-Ejemplo: S/ 1,000 × 0.3% × 10 días = S/ 30 → total S/ 1,030.
+**Fórmula:** deuda = monto × 1.003 ^ días transcurridos (interés de 0.3% diario que se suma cada medianoche sobre la deuda). El pago es por el total, sin pagos parciales.
+Ejemplo: S/ 1,000 a 10 días = S/ 1,030.41.
 
 ---
 

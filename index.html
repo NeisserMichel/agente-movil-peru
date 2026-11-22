@@ -108,15 +108,15 @@ html{scroll-behavior:smooth;scroll-padding-top:72px}
 <nav aria-label="Principal"><div class="in">
   <a class="brand" href="#inicio"><img src="logo.png" alt="Agente Móvil Perú"></a>
   <div class="links"><a href="#como">Cómo funciona</a><a href="#simulador">Simulador</a><a href="#requisitos">Requisitos</a><a href="#descargar">Descargar app</a><a href="#preguntas">Preguntas</a><a href="#contacto">Contacto</a></div>
-  <a class="btn sun" href="app/index.html" style="min-height:44px">Ingresar a la app</a>
+  <a class="btn sun" href="app/index.html" style="min-height:44px">Iniciar sesión</a>
 </div></nav>
 
 <header class="band hero" id="inicio"><div class="in">
   <div class="copy">
     <h1>Tu préstamo, directo a tu celular</h1>
     <p class="lead">Regístrate con tu correo, pide el monto que necesitas y recibe la aprobación y el depósito en la misma app.</p>
-    <div class="cta"><a class="btn white" href="agente-movil.apk" download>Descargar la app (Android)</a><a class="btn line" href="app/index.html">Solicitar mi crédito</a></div>
-    <p class="small" style="margin:12px 0 0">¿Tienes iPhone? <a href="#descargar">Mira cómo instalarla</a></p>
+    <div class="cta"><a class="btn white" href="agente-movil.apk" download>Descargar la app (Android)</a><a class="btn line" href="app/index.html">Iniciar sesión</a></div>
+    <p class="small" style="margin:12px 0 0">Entra desde aquí, sin instalar nada, con tu cuenta y tu clave de 6 dígitos. ¿Tienes iPhone? <a href="#descargar">Mira cómo instalarla</a></p>
     <div class="facts"><div><b>S/ 100 – 5,000</b><span>montos disponibles</span></div><div><b>1 a 14 días</b><span>tú eliges el plazo</span></div><div><b>Yape · Plin</b><span>depósito y pago</span></div></div>
   </div>
   <svg class="scene" viewBox="0 0 560 460" role="img" aria-label="Celular mostrando un crédito depositado, con cerros y el sol de fondo">
@@ -145,7 +145,7 @@ html{scroll-behavior:smooth;scroll-padding-top:72px}
       <g transform="rotate(10 290 240)"><rect x="262" y="226" width="58" height="20" rx="5" fill="none" stroke="#127a4b" stroke-width="2"/><text x="291" y="240" text-anchor="middle" font-family="Archivo,sans-serif" font-size="9" font-weight="700" fill="#127a4b">APROBADO</text></g>
       <rect x="194" y="290" width="122" height="7" rx="3.5" fill="#e8e1e2"/><rect x="194" y="290" width="40" height="7" rx="3.5" fill="#127a4b"/>
       <text x="194" y="320" font-family="Inter,sans-serif" font-size="10" fill="#6b6265">Vence en 10 días</text>
-      <text x="194" y="346" font-family="Archivo,sans-serif" font-size="13" font-weight="600" fill="#1a1517">Total S/ 1,545</text>
+      <text x="194" y="346" font-family="Archivo,sans-serif" font-size="13" font-weight="600" fill="#1a1517">Total S/ 1,545.61</text>
       <rect x="182" y="380" width="146" height="40" rx="12" fill="#007a26"/>
       <text x="255" y="405" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#fff">Coordinar pago</text>
     </g>
@@ -175,15 +175,15 @@ html{scroll-behavior:smooth;scroll-padding-top:72px}
       <input id="amt" type="range" min="100" max="5000" step="50" value="1000">
       <label for="days" style="margin-top:18px">Plazo</label><div class="val" id="daysv">7 días</div>
       <input id="days" type="range" min="1" max="14" step="1" value="7">
-      <p style="margin:18px 0 0;color:var(--mute)">Interés: <b style="color:var(--ink)">0.3% diario</b>. Pagas solo por los días que uses el dinero.</p>
+      <p style="margin:18px 0 0;color:var(--mute)">Interés: <b style="color:var(--ink)">0.3% diario</b>, que se suma cada día sobre tu deuda. Pagas solo por los días que uses el dinero.</p>
     </div>
     <div class="result" aria-live="polite">
       <div><div class="small">Total a pagar</div><div class="big" id="tot">S/ 1,060.00</div><div class="small" id="due"></div></div>
-      <div><div class="rl"><span>Monto recibido</span><b id="r1"></b></div><div class="rl"><span>Interés</span><b id="r2"></b></div><div class="rl"><span>Interés por cada día</span><b id="r3"></b></div></div>
+      <div><div class="rl"><span>Monto recibido</span><b id="r1"></b></div><div class="rl"><span>Interés</span><b id="r2"></b></div><div class="rl"><span>Tasa de interés</span><b id="r3"></b></div></div>
       <a class="btn light" href="app/index.html">Solicitar este crédito</a>
     </div>
   </div>
-  <p class="sample">Cálculo referencial con interés simple diario. El monto final se confirma al aprobar la solicitud.</p>
+  <p class="sample">Cálculo referencial. El monto final se confirma al aprobar la solicitud.</p>
 </div></section>
 
 <section class="band" id="requisitos"><div class="in">
@@ -209,8 +209,8 @@ html{scroll-behavior:smooth;scroll-padding-top:72px}
   <h2>Preguntas frecuentes</h2>
   <div class="faq">
     <details><summary>¿Cuánto demora la respuesta?</summary><p>Revisamos cada solicitud el mismo día hábil. Apenas la aprobamos y depositamos, te llega la notificación en la app.</p></details>
-    <details><summary>¿Cómo se calcula el interés?</summary><p>Es un interés simple de 0.3% diario sobre el monto prestado, y pagas solo por los días que uses el dinero. Por ejemplo, S/ 1,000 por 10 días son S/ 30 de interés: pagarías S/ 1,030 en total.</p></details>
-    <details><summary>¿Puedo pagar antes o en partes?</summary><p>Sí. Puedes pagar por Yape o transferencia a nuestras cuentas, que aparecen en la app. Cada pago se registra y la app te muestra tu deuda al día.</p></details>
+    <details><summary>¿Cómo se calcula el interés?</summary><p>El interés es de 0.3% diario. Cada medianoche se suma sobre tu deuda del día anterior, desde el día del depósito. Por ejemplo, S/ 1,000 por 10 días son S/ 30.41 de interés: pagarías S/ 1,030.41 en total.</p></details>
+    <details><summary>¿Puedo pagar antes?</summary><p>Sí, y pagas solo por los días transcurridos. El pago es por el total de la deuda, en un solo pago: no hay pagos parciales. Pagas por Yape o transferencia a nuestras cuentas, que aparecen en la app junto con tu deuda al día.</p></details>
     <details><summary>¿Puedo pedir otro crédito?</summary><p>Sí, puedes enviar una nueva solicitud desde la app cuando lo necesites.</p></details>
     <details><summary>¿Mis datos están seguros?</summary><p>Usamos tus datos solo para evaluar y gestionar tu crédito, conforme a la Ley N.º 29733 de Protección de Datos Personales.</p></details>
   </div>
@@ -242,10 +242,10 @@ html{scroll-behavior:smooth;scroll-padding-top:72px}
   const money = n => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
   const $ = id => document.getElementById(id);
   const upd = () => {
-    const a = +$('amt').value, days = +$('days').value, perDay = Math.round(a * TASA) / 100, i = Math.round(a * TASA * days) / 100;
+    const a = +$('amt').value, days = +$('days').value, i = Math.round(a * (Math.pow(1 + TASA / 100, days) - 1) * 100) / 100;
     const d = new Date(); d.setDate(d.getDate() + days);
     $('amtv').textContent = money(a); $('daysv').textContent = days + (days === 1 ? ' día' : ' días'); $('tot').textContent = money(a + i);
-    $('r1').textContent = money(a); $('r2').textContent = money(i); $('r3').textContent = money(perDay);
+    $('r1').textContent = money(a); $('r2').textContent = money(i); $('r3').textContent = TASA + '% diario';
     $('due').textContent = 'Si pagas el ' + d.toLocaleDateString('es-PE', { day: 'numeric', month: 'long' });
   };
   $('days').oninput = upd;

@@ -13,17 +13,17 @@ const fwhen = iso => new Date(iso).toLocaleString('es-PE', {day:'2-digit', month
 const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5);
 const wa = (phone, text) => `https://wa.me/${String(phone || '').replace(/\D/g,'').replace(/^(?!51)(\d{9})$/, '51$1')}?text=${encodeURIComponent(text)}`;
 
-/* ---------- Cálculo del crédito: interés simple diario sobre el monto prestado ---------- */
+/* ---------- Cálculo del crédito: interés diario compuesto (cada medianoche se suma sobre la deuda del día anterior) ---------- */
 function calc(amount, ratePct, days) {
-  const perDay = r2(amount * ratePct / 100), interest = r2(amount * ratePct / 100 * days);
-  return { perDay, interest, total: r2(+amount + interest) };
+  const total = r2(amount * Math.pow(1 + ratePct / 100, days));
+  return { interest: r2(total - amount), total };
 }
 const paidOf = l => r2((l.payments || []).reduce((s, p) => s + +p.amount, 0));
 const elapsedOf = (l, on = todayISO()) => Math.max(0, daysBetween(l.start_date, on));           // días desde el depósito
-const perDayOf = l => r2(l.approved_amount * l.daily_rate / 100);
-const accruedOf = (l, on) => l.status === 'pagado' ? +l.total_interest || 0 : r2(l.approved_amount * l.daily_rate / 100 * elapsedOf(l, on));
+const accruedOf = (l, on) => l.status === 'pagado' ? +l.total_interest || 0 : r2(l.approved_amount * (Math.pow(1 + l.daily_rate / 100, elapsedOf(l, on)) - 1));
 const debtOf = (l, on) => l.status !== 'depositado' ? 0 : r2(Math.max(0, +l.approved_amount + accruedOf(l, on) - paidOf(l)));  // deuda a una fecha
 const interestPaidOf = l => l.status === 'pagado' ? +l.total_interest || 0 : l.status === 'depositado' ? Math.min(paidOf(l), accruedOf(l)) : 0;
+const nextOf = l => r2(debtOf(l, addDays(todayISO(), 1)) - debtOf(l));   // cuánto subirá la deuda a medianoche
 const isOverdue = l => l.status === 'depositado' && l.due_date && l.due_date < todayISO();
 const totalsOf = loans => {
   const ok = loans.filter(l => l.status === 'depositado' || l.status === 'pagado');
@@ -103,7 +103,7 @@ function traducir(m) {
    BACKEND 2: DEMO (todo en este navegador, para probar)
    ================================================================= */
 function demoBackend() {
-  const KEY = 'amp_demo_v2', SKEY = 'amp_demo_session';
+  const KEY = 'amp_demo_v3', SKEY = 'amp_demo_session';
   let mem = null, memSession = null;
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return mem; } };
   const write = db => { mem = db; try { localStorage.setItem(KEY, JSON.stringify(db)); } catch {} listeners.forEach(f => f(null)); };
@@ -122,7 +122,6 @@ function demoBackend() {
       deposit_method: 'yape', deposit_number: '912345678', deposit_holder: 'José Mamani Rojas',
       approved_amount: 800, daily_rate: 0.3, term_days: 14, total_interest: c.interest, total_to_pay: c.total, start_date: start, due_date: addDays(start, 14),
       created_at: iso(now - 6 * 864e5), decided_at: iso(now - 5 * 864e5) });
-    db.payments.push({ id: 1, loan_id: 1, amount: 300, paid_on: addDays(start, 2), note: 'Yape', created_at: iso(now - 3 * 864e5) });
     db.loans.push({ id: 2, client_id: 'u-maria', requested_amount: 1500, requested_days: 10, purpose: 'Capital de trabajo', status: 'pendiente',
       deposit_method: 'cuenta', deposit_bank: 'BCP', deposit_number: '19112345678012', deposit_holder: 'María Quispe Huamán', created_at: iso(now - 36e5) });
     db.notifications.push({ id: 1, user_id: 'u-admin', title: 'Nueva solicitud de préstamo', body: 'María Quispe Huamán (DNI 45678912, cel. 987654321) solicitó un préstamo por S/ 1,500.00 a 10 días.', loan_id: 2, read: false, created_at: iso(now - 36e5) });
@@ -323,7 +322,7 @@ const rateTxt = r => (+r).toFixed(2).replace(/0$/, '') + '% diario';
 function accountsCard() {
   const cs = C.CUENTAS || [];
   if (!cs.length) return '';
-  return `<div class="card"><h2>Cuentas para pagar</h2><p class="hint">Deposita a cualquiera de estas cuentas y envíanos tu constancia por WhatsApp.</p>
+  return `<div class="card"><h2>Cuentas para pagar</h2><p class="hint">Deposita el total de tu deuda a cualquiera de estas cuentas y envíanos tu constancia por WhatsApp.</p>
     <ul class="list" style="margin-top:6px">${cs.map(c => `<li class="item" style="cursor:default">
       <div><div class="who">${esc(c.banco)}</div><div class="sub">${esc(c.etiqueta)}: <b class="acc">${esc(c.numero)}</b></div><div class="sub">${esc(c.titular)}</div></div>
       <button class="btn ghost small" data-copy="${esc(c.numero)}">Copiar</button></li>`).join('')}</ul></div>`;
@@ -383,11 +382,12 @@ function voucher(l) {
     <div class="bar" aria-hidden="true"><i style="width:${Math.min(100, el / l.term_days * 100)}%;${over ? 'background:var(--bad)' : ''}"></i></div>
     <div class="grid2"><div class="kv"><div class="k">Monto depositado</div><div class="v">${money(l.approved_amount)}</div></div>
     <div class="kv"><div class="k">Interés acumulado</div><div class="v">${money(accruedOf(l))}</div></div>
-    <div class="kv"><div class="k">Interés ${rateTxt(l.daily_rate)}</div><div class="v">+ ${money(perDayOf(l))} por día</div></div>
-    <div class="kv"><div class="k">Ya pagaste</div><div class="v">${money(paid)}</div></div></div>
-    ${over ? '' : `<p class="hint" style="margin-top:14px">Si pagas el ${fdate(l.due_date)}, el total será <b>${money(debtOf(l, l.due_date))}</b>.</p>`}
+    <div class="kv"><div class="k">Interés</div><div class="v">${rateTxt(l.daily_rate)}</div></div>
+    <div class="kv"><div class="k">Mañana sumará</div><div class="v">+ ${money(nextOf(l))}</div></div></div>
+    <p class="hint" style="margin-top:14px">Cada medianoche se suma el ${rateTxt(l.daily_rate)} sobre tu deuda. El pago es por el total.</p>
+    ${over ? '' : `<p class="hint" style="margin-top:6px">Si pagas el ${fdate(l.due_date)}, el total será <b>${money(debtOf(l, l.due_date))}</b>.</p>`}
     <div class="actions"><button class="btn ghost" data-loan="${l.id}">Ver detalle</button>
-    <a class="btn" href="${wa(C.WHATSAPP, `Hola, soy ${S.me.full_name}. Quiero coordinar el pago de mi crédito #${l.id}. Mi deuda hoy es ${money(debt)}.`)}" target="_blank" rel="noopener">Coordinar pago</a></div></section>`;
+    <a class="btn" href="${wa(C.WHATSAPP, `Hola, soy ${S.me.full_name}. Quiero coordinar el pago total de mi crédito #${l.id}. Mi deuda hoy es ${money(debt)}.`)}" target="_blank" rel="noopener">Coordinar pago</a></div></section>`;
 }
 function pendingCard(l) {
   return `<section class="voucher"><span class="stamp" style="border-color:var(--bd);color:var(--bd)">EN REVISIÓN</span>
@@ -438,9 +438,8 @@ function openRequest() {
       $('#amtv', bg).textContent = money(amount);
       const d = Math.min(MAXD, Math.max(1, Math.round(days) || 1)), c = calc(amount, RATE, d);
       $('#est', bg).innerHTML = `<div class="line"><span>Interés</span><b>${rateTxt(RATE)}</b></div>
-        <div class="line"><span>Interés por cada día</span><b>${money(c.perDay)}</b></div>
         <div class="line total"><span>Si pagas a los ${d} día${d === 1 ? '' : 's'}</span><b>${money(c.total)}</b></div>
-        <p class="hint">Pagas solo por los días que uses el dinero. El monto final te lo confirmamos al aprobar.</p>`;
+        <p class="hint">El interés se suma cada día sobre tu deuda, desde el día del depósito. Pagas el total en un solo pago, solo por los días que uses el dinero.</p>`;
     };
     $('#amtr', bg).oninput = e => { amount = +e.target.value; $('#amt', bg).value = amount; upd(); };
     $('#amt', bg).oninput = e => { amount = +e.target.value || 0; $('#amtr', bg).value = amount; upd(); };
@@ -584,8 +583,7 @@ function openEvaluate(l) {
       rate = +$('#rc', bg).value || 0;
       const { amount, days, start } = v(), c = calc(amount, rate, days);
       $('#cc', bg).innerHTML = `<div class="line"><span>Capital</span><b>${money(amount)}</b></div>
-        <div class="line"><span>Interés por día (${rate}%)</span><b>${money(c.perDay)}</b></div>
-        <div class="line"><span>Interés en ${days} días</span><b>${money(c.interest)}</b></div>
+        <div class="line"><span>Interés en ${days} días (${rate}% diario)</span><b>${money(c.interest)}</b></div>
         <div class="line"><span>Vence el</span><b>${fdate(addDays(start, days))}</b></div>
         <div class="line total"><span>Total si paga al vencimiento</span><b>${money(c.total)}</b></div>`;
     };
@@ -628,42 +626,38 @@ function openLoan(l) {
       <div class="line"><span>Cancelado el</span><b>${fdate(l.paid_at)}</b></div></div>${paysHTML}`;
   else body = `<div class="calc"><div class="line"><span>Depositado el</span><b>${fdate(l.start_date)}</b></div>
       <div class="line"><span>Monto prestado</span><b>${money(l.approved_amount)}</b></div>${admin ? depositLine(l) : ''}
-      <div class="line"><span>Interés</span><b>${rateTxt(l.daily_rate)} (${money(perDayOf(l))} por día)</b></div>
+      <div class="line"><span>Interés</span><b>${rateTxt(l.daily_rate)}, sobre la deuda</b></div>
       <div class="line"><span>Días transcurridos</span><b>${elapsedOf(l)} de ${l.term_days}</b></div>
       <div class="line"><span>Interés acumulado</span><b>${money(acc)}</b></div>
-      <div class="line"><span>Pagado</span><b>${money(paid)}</b></div>
+      ${paid ? `<div class="line"><span>Pagado</span><b>${money(paid)}</b></div>` : ''}
       <div class="line total"><span>Deuda al día de hoy</span><b style="color:var(--red-ink)">${money(debt)}</b></div>
+      <div class="line"><span>Mañana sumará</span><b>+ ${money(nextOf(l))}</b></div>
       <div class="line"><span>Vence el</span><b>${fdate(l.due_date)}</b></div>
       ${isOverdue(l) ? '' : `<div class="line"><span>Si paga al vencimiento</span><b>${money(debtOf(l, l.due_date))}</b></div>`}</div>
       ${l.admin_note ? `<p class="hint">Nota: ${esc(l.admin_note)}</p>` : ''}${paysHTML}
-      ${admin ? `<form id="payf" class="card" novalidate><h3>Registrar pago</h3>
-        <div class="row2"><div><label for="pa">Monto (S/)</label><input id="pa" type="number" inputmode="decimal" step="any" min="0.01" value="${debt.toFixed(2)}"></div>
-        <div><label for="pd">Fecha</label><input id="pd" type="date" value="${todayISO()}"></div></div>
-        <label for="pn">Medio / nota</label><input id="pn" placeholder="Yape, Plin, efectivo…" maxlength="80">
-        <p class="err" id="perr"></p><button class="btn block">Guardar pago</button></form>
-        <div class="actions">${p.phone ? `<a class="btn ghost" target="_blank" rel="noopener" href="${wa(p.phone, `Hola ${p.full_name}, te recordamos que tu crédito #${l.id} vence el ${fdate(l.due_date)}. Tu deuda al día de hoy es ${money(debt)}.`)}">Recordar por WhatsApp</a>` : ''}
-        <button class="btn ghost" id="mpaid">Marcar como pagado</button></div>` : ''}`;
+      ${admin ? `<form id="payf" class="card" novalidate><h3>Registrar pago total</h3>
+        <p class="hint">El préstamo se paga completo, en un solo pago.</p>
+        <div class="row2"><div><label for="pd">Fecha del pago</label><input id="pd" type="date" value="${todayISO()}" max="${todayISO()}"></div>
+        <div><label for="pn">Medio</label><input id="pn" placeholder="Yape, BCP, efectivo…" maxlength="80"></div></div>
+        <div class="calc"><div class="line total"><span>Monto a cobrar</span><b id="pamt">${money(debt)}</b></div></div>
+        <p class="err" id="perr"></p><button class="btn block" id="psub">Confirmar pago total</button></form>
+        <div class="actions">${p.phone ? `<a class="btn ghost" target="_blank" rel="noopener" href="${wa(p.phone, `Hola ${p.full_name}, te recordamos que tu crédito #${l.id} vence el ${fdate(l.due_date)}. Tu deuda al día de hoy es ${money(debt)}.`)}">Recordar por WhatsApp</a>` : ''}</div>` : ''}`;
   sheet(`<div class="head"><h2>Crédito #${l.id}</h2><button class="x" data-close aria-label="Cerrar">×</button></div>
     ${statusChip(l)} ${admin ? `<span class="hint">· ${esc(p.full_name)} · DNI ${esc(p.dni || '—')} · cel. ${esc(p.phone || '—')}</span>` : ''}${body}`, bg => {
-    const close = async (on, paidTotal) => {
-      const interest = r2(Math.min(paidTotal, accruedOf(l, on)));
-      await api.updateLoan(l.id, { status: 'pagado', total_interest: interest, total_to_pay: r2(+l.approved_amount + interest), paid_at: new Date(on + 'T12:00:00').toISOString() });
-    };
     const f = $('#payf', bg);
-    if (f) f.onsubmit = async e => {
-      e.preventDefault(); const a = r2(+$('#pa', bg).value), on = $('#pd', bg).value || todayISO();
-      if (!(a > 0)) { $('#perr', bg).textContent = 'Escribe un monto válido.'; return; }
+    if (!f) return;
+    const when = () => { const d = $('#pd', bg).value || todayISO(); return d < l.start_date ? l.start_date : d; };
+    $('#pd', bg).oninput = () => $('#pamt', bg).textContent = money(debtOf(l, when()));
+    f.onsubmit = async e => {
+      e.preventDefault(); const b = $('#psub', bg);
+      if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = `¿Recibiste ${money(debtOf(l, when()))}? Toca otra vez`; return; }
+      b.disabled = true;
       try {
-        const full = a >= debtOf(l, on) - 0.004;
-        await api.addPayment(l.id, a, $('#pn', bg).value.trim() || null, on);
-        if (full) await close(on, paid + a);
-        closeSheet(); await refresh(); toast(full ? 'Pago registrado. Crédito cancelado.' : 'Pago registrado.');
-      } catch (x) { $('#perr', bg).textContent = x.message; }
-    };
-    const mp = $('#mpaid', bg);
-    if (mp) mp.onclick = async () => {
-      if (mp.dataset.sure !== '1') { mp.dataset.sure = '1'; mp.textContent = debt > 0 ? `Aún debe ${money(debt)}. ¿Confirmar?` : '¿Confirmar?'; return; }
-      try { await close(todayISO(), paid); closeSheet(); await refresh(); toast('Crédito marcado como pagado.'); } catch (x) { toast(x.message); }
+        const on = when(), amount = debtOf(l, on), interest = accruedOf(l, on);
+        await api.addPayment(l.id, amount, $('#pn', bg).value.trim() || null, on);
+        await api.updateLoan(l.id, { status: 'pagado', total_interest: interest, total_to_pay: r2(+l.approved_amount + interest), paid_at: new Date(on + 'T12:00:00').toISOString() });
+        closeSheet(); await refresh(); toast('Pago registrado. Crédito cancelado.');
+      } catch (x) { $('#perr', bg).textContent = x.message; b.disabled = false; }
     };
   });
 }
