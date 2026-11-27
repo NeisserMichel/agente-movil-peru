@@ -20,8 +20,8 @@
 
 Además tienes un resumen (capital prestado, por cobrar, intereses, vencidos), una lista de clientes y recordatorios por WhatsApp con un toque.
 
-**Fórmula:** deuda = monto × 1.003 ^ días transcurridos (interés de 0.3% diario que se suma cada medianoche sobre la deuda). El pago es por el total, sin pagos parciales.
-Ejemplo: S/ 1,000 a 10 días = S/ 1,030.41.
+**Cálculo:** el interés de 0.3% se cobra el mismo día del depósito y luego cada medianoche, sobre la deuda actual y redondeado a 2 decimales. El pago es por el total, sin pagos parciales. El plazo puede ser un número de días o tiempo libre (sin vencimiento).
+Ejemplo: S/ 1,000 a 10 días = S/ 1,033.50.
 
 ---
 
