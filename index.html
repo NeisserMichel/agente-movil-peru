@@ -145,7 +145,7 @@ html{scroll-behavior:smooth;scroll-padding-top:72px}
       <g transform="rotate(10 290 240)"><rect x="262" y="226" width="58" height="20" rx="5" fill="none" stroke="#127a4b" stroke-width="2"/><text x="291" y="240" text-anchor="middle" font-family="Archivo,sans-serif" font-size="9" font-weight="700" fill="#127a4b">APROBADO</text></g>
       <rect x="194" y="290" width="122" height="7" rx="3.5" fill="#e8e1e2"/><rect x="194" y="290" width="40" height="7" rx="3.5" fill="#127a4b"/>
       <text x="194" y="320" font-family="Inter,sans-serif" font-size="10" fill="#6b6265">Vence en 10 días</text>
-      <text x="194" y="346" font-family="Archivo,sans-serif" font-size="13" font-weight="600" fill="#1a1517">Total S/ 1,550.25</text>
+      <text x="194" y="346" font-family="Archivo,sans-serif" font-size="13" font-weight="600" fill="#1a1517">Total S/ 1,549.50</text>
       <rect x="182" y="380" width="146" height="40" rx="12" fill="#007a26"/>
       <text x="255" y="405" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" font-weight="600" fill="#fff">Coordinar pago</text>
     </g>
@@ -175,7 +175,7 @@ html{scroll-behavior:smooth;scroll-padding-top:72px}
       <input id="amt" type="range" min="100" max="5000" step="50" value="1000">
       <label for="days" style="margin-top:18px">Plazo</label><div class="val" id="daysv">7 días</div>
       <input id="days" type="range" min="1" max="14" step="1" value="7">
-      <p style="margin:18px 0 0;color:var(--mute)">Interés: <b style="color:var(--ink)">0.3% diario</b>, desde el día del depósito, que se suma cada medianoche sobre tu deuda. ¿No sabes cuántos días lo necesitarás? En la app puedes pedirlo en <b style="color:var(--ink)">tiempo libre</b> y pagar cuando quieras.</p>
+      <p style="margin:18px 0 0;color:var(--mute)">Interés: <b style="color:var(--ink)">0.3% diario</b>, desde el día del depósito, que se suma cada medianoche y siempre se calcula sobre el monto prestado. ¿No sabes cuántos días lo necesitarás? En la app puedes pedirlo en <b style="color:var(--ink)">tiempo libre</b> y pagar cuando quieras.</p>
     </div>
     <div class="result" aria-live="polite">
       <div><div class="small">Total a pagar</div><div class="big" id="tot">S/ 1,060.00</div><div class="small" id="due"></div></div>
@@ -209,8 +209,8 @@ html{scroll-behavior:smooth;scroll-padding-top:72px}
   <h2>Preguntas frecuentes</h2>
   <div class="faq">
     <details><summary>¿Cuánto demora la respuesta?</summary><p>Revisamos cada solicitud el mismo día hábil. Apenas la aprobamos y depositamos, te llega la notificación en la app.</p></details>
-    <details><summary>¿Cómo se calcula el interés?</summary><p>El interés es de 0.3% diario. Se cobra desde el mismo día del depósito y luego cada medianoche se suma sobre tu deuda del día anterior. Por ejemplo, S/ 1,000 por 10 días son S/ 33.50 de interés: pagarías S/ 1,033.50 en total.</p></details>
-    <details><summary>¿Qué es el tiempo libre?</summary><p>Es para cuando no sabes cuántos días necesitarás el dinero. El crédito no tiene fecha fija de vencimiento: el interés se sigue sumando cada día y pagas el total de tu deuda cuando quieras.</p></details>
+    <details><summary>¿Cómo se calcula el interés?</summary><p>El interés es de 0.3% diario sobre el monto prestado. Se cobra desde el mismo día del depósito y luego se suma cada medianoche, siempre el mismo monto: no se cobra interés sobre el interés. Por ejemplo, por S/ 1,000 son S/ 3 por día; a 10 días son S/ 33 de interés y pagarías S/ 1,033 en total.</p></details>
+    <details><summary>¿Qué es el tiempo libre?</summary><p>Es para cuando no sabes cuántos días necesitarás el dinero. El crédito no tiene fecha fija de vencimiento: el interés diario se sigue sumando y pagas el total de tu deuda cuando quieras.</p></details>
     <details><summary>¿Puedo pagar antes?</summary><p>Sí, y pagas solo por los días transcurridos. El pago es por el total de la deuda, en un solo pago: no hay pagos parciales. Pagas por Yape o transferencia a nuestras cuentas, que aparecen en la app junto con tu deuda al día.</p></details>
     <details><summary>¿Puedo pedir otro crédito?</summary><p>Sí, puedes enviar una nueva solicitud desde la app cuando lo necesites.</p></details>
     <details><summary>¿Mis datos están seguros?</summary><p>Usamos tus datos solo para evaluar y gestionar tu crédito, conforme a la Ley N.º 29733 de Protección de Datos Personales.</p></details>
@@ -243,8 +243,8 @@ html{scroll-behavior:smooth;scroll-padding-top:72px}
   const money = n => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
   const $ = id => document.getElementById(id);
   const r2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
-  // El interés se cobra el día del depósito y luego cada medianoche, sobre la deuda actual
-  const grow = (a, times) => { let d = r2(a); for (let k = 0; k < times; k++) d = r2(d + r2(d * TASA / 100)); return d; };
+  // Interés simple: el día del depósito y cada medianoche se suma el mismo monto (el % del monto prestado)
+  const grow = (a, times) => r2(a + r2(a * TASA / 100) * times);
   const upd = () => {
     const a = +$('amt').value, days = +$('days').value, i = Math.round((grow(a, days + 1) - a) * 100) / 100;
     const d = new Date(); d.setDate(d.getDate() + days);

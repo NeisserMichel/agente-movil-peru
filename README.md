@@ -20,8 +20,8 @@
 
 Además tienes un resumen (capital prestado, por cobrar, intereses, vencidos), una lista de clientes y recordatorios por WhatsApp con un toque.
 
-**Cálculo:** el interés de 0.3% se cobra el mismo día del depósito y luego cada medianoche, sobre la deuda actual y redondeado a 2 decimales. El pago es por el total, sin pagos parciales. El plazo puede ser un número de días o tiempo libre (sin vencimiento).
-Ejemplo: S/ 1,000 a 10 días = S/ 1,033.50.
+**Cálculo:** interés simple. El 0.3% del monto prestado (redondeado a 2 decimales) se suma el mismo día del depósito y luego cada medianoche; no se cobra interés sobre el interés. El pago es por el total, sin pagos parciales. El plazo puede ser un número de días o tiempo libre (sin vencimiento).
+Ejemplo: S/ 1,000 a 10 días = S/ 1,033.00.
 
 ---
 

@@ -1,5 +1,6 @@
 /* Agente Móvil Perú · App de créditos (cliente + administrador) */
 {
+const APP_VERSION = 12;   // debe coincidir con version.json; al subirla, las apps abiertas piden actualizar
 const C = window.AMP_CONFIG || {};
 const DEMO = !C.SUPABASE_URL || !C.SUPABASE_ANON_KEY;
 const $ = (s, el = document) => el.querySelector(s);
@@ -15,8 +16,9 @@ const wa = (phone, text) => `https://wa.me/${String(phone || '').replace(/\D/g,'
 
 /* ---------- Cálculo del crédito ----------
    El interés diario se cobra desde el mismo día del depósito y luego cada medianoche:
-   cada vez se suma el % sobre la deuda actual, redondeado a 2 decimales. */
-function grow(amount, ratePct, times) { let d = r2(amount); for (let i = 0; i < times; i++) d = r2(d + r2(d * ratePct / 100)); return d; }
+   cada vez se suma el mismo monto: el % del monto prestado inicialmente, redondeado a 2 decimales
+   (interés simple: no se cobra interés sobre el interés). */
+function grow(amount, ratePct, times) { return r2(+amount + r2(amount * ratePct / 100) * times); }
 function calc(amount, ratePct, days) {
   const total = grow(amount, ratePct, days + 1);   // día del depósito + una vez por cada medianoche
   return { interest: r2(total - amount), total };
@@ -109,7 +111,7 @@ function traducir(m) {
    BACKEND 2: DEMO (todo en este navegador, para probar)
    ================================================================= */
 function demoBackend() {
-  const KEY = 'amp_demo_v4', SKEY = 'amp_demo_session';
+  const KEY = 'amp_demo_v5', SKEY = 'amp_demo_session';
   let mem = null, memSession = null;
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return mem; } };
   const write = db => { mem = db; try { localStorage.setItem(KEY, JSON.stringify(db)); } catch {} listeners.forEach(f => f(null)); };
@@ -390,7 +392,7 @@ function voucher(l) {
     <div class="kv"><div class="k">Interés acumulado</div><div class="v">${money(accruedOf(l))}</div></div>
     <div class="kv"><div class="k">Interés</div><div class="v">${rateTxt(l.daily_rate)}</div></div>
     <div class="kv"><div class="k">Mañana sumará</div><div class="v">+ ${money(nextOf(l))}</div></div></div>
-    <p class="hint" style="margin-top:14px">El interés se cobra desde el día del depósito y cada medianoche se suma el ${rateTxt(l.daily_rate)} sobre tu deuda. El pago es por el total.</p>
+    <p class="hint" style="margin-top:14px">El interés se cobra desde el día del depósito y cada medianoche se suma el ${rateTxt(l.daily_rate)} del monto depositado. El pago es por el total.</p>
     ${over || !l.due_date ? '' : `<p class="hint" style="margin-top:6px">Si pagas el ${fdate(l.due_date)}, el total será <b>${money(debtOf(l, l.due_date))}</b>.</p>`}
     <div class="actions"><button class="btn ghost" data-loan="${l.id}">Ver detalle</button>
     <a class="btn" href="${wa(C.WHATSAPP, `Hola, soy ${S.me.full_name}. Quiero coordinar el pago total de mi crédito #${l.id}. Mi deuda hoy es ${money(debt)}.`)}" target="_blank" rel="noopener">Coordinar pago</a></div></section>`;
@@ -471,7 +473,7 @@ function openRequest() {
            <div class="line"><span>Si pagas a los 7 días</span><b>${money(calc(amount, RATE, 7).total)}</b></div>
            <div class="line"><span>Si pagas a los 14 días</span><b>${money(calc(amount, RATE, 14).total)}</b></div>`
         : `<div class="line total"><span>Si pagas a los ${Math.min(MAXD, Math.max(1, d))} día${d === 1 ? '' : 's'}</span><b>${money(calc(amount, RATE, Math.min(MAXD, Math.max(1, d))).total)}</b></div>`)
-        + `<p class="hint">El interés se cobra desde el día del depósito y se suma cada medianoche sobre tu deuda. Pagas el total en un solo pago.</p>`;
+        + `<p class="hint">El interés se cobra desde el día del depósito y se suma cada medianoche: siempre el ${rateTxt(RATE)} del monto prestado. Pagas el total en un solo pago.</p>`;
     };
     termBind(bg, upd);
     $('#amtr', bg).oninput = e => { amount = +e.target.value; $('#amt', bg).value = amount; upd(); };
@@ -609,7 +611,8 @@ function openEvaluate(l, startDefault) {
     <div class="calc" id="cc"></div>
     <p class="err" id="everr"></p>
     <div class="actions"><button type="button" class="btn ghost" id="rej">Rechazar</button>
-    <button class="btn ok" id="apr">Confirmar aprobación y depósito</button></div></form>`, bg => {
+    <button class="btn ok" id="apr">Confirmar aprobación y depósito</button></div>
+    <p style="text-align:center;margin:16px 0 0"><button type="button" class="btn ghost small danger" data-del="${l.id}" data-what="credito">Eliminar este crédito</button></p></form>`, bg => {
     const v = () => ({ amount: +$('#am', bg).value || 0, days: termPeek(bg), start: $('#sd', bg).value || todayISO() });
     const upd = () => {
       rate = +$('#rc', bg).value || 0;
@@ -662,7 +665,7 @@ function openLoan(l) {
       <div class="line"><span>Cancelado el</span><b>${fdate(l.paid_at)}</b></div></div>${paysHTML}`;
   else body = `<div class="calc"><div class="line"><span>Depositado el</span><b>${fdate(l.start_date)}</b></div>
       <div class="line"><span>Monto prestado</span><b>${money(l.approved_amount)}</b></div>${admin ? depositLine(l) : ''}
-      <div class="line"><span>Interés</span><b>${rateTxt(l.daily_rate)}, sobre la deuda</b></div>
+      <div class="line"><span>Interés</span><b>${rateTxt(l.daily_rate)} del monto prestado</b></div>
       <div class="line"><span>Día del crédito</span><b>${elapsedOf(l) + 1}${l.term_days ? ' (plazo: ' + dTxt(l.term_days) + ')' : ''}</b></div>
       <div class="line"><span>Interés acumulado</span><b>${money(acc)}</b></div>
       ${paid ? `<div class="line"><span>Pagado</span><b>${money(paid)}</b></div>` : ''}
@@ -679,7 +682,9 @@ function openLoan(l) {
         <p class="err" id="perr"></p><button class="btn block" id="psub">Confirmar pago total</button></form>
         <div class="actions">${p.phone ? `<a class="btn ghost" target="_blank" rel="noopener" href="${wa(p.phone, `Hola ${p.full_name}, te recordamos tu crédito #${l.id}${l.due_date ? ', que vence el ' + fdate(l.due_date) : ''}. Tu deuda al día de hoy es ${money(debt)}.`)}">Recordar por WhatsApp</a>` : ''}</div>` : ''}`;
   sheet(`<div class="head"><h2>Crédito #${l.id}</h2><button class="x" data-close aria-label="Cerrar">×</button></div>
-    ${statusChip(l)} ${admin ? `<span class="hint">· ${esc(p.full_name)} · DNI ${esc(p.dni || '—')} · cel. ${esc(p.phone || '—')}</span>` : ''}${body}`, bg => {
+    ${statusChip(l)} ${admin ? `<span class="hint">· ${esc(p.full_name)} · DNI ${esc(p.dni || '—')} · cel. ${esc(p.phone || '—')}</span>` : ''}${body}
+    ${admin ? `<p style="text-align:center;margin:18px 0 0"><button type="button" class="btn ghost small danger" data-del="${l.id}" data-what="credito">Eliminar este crédito</button></p>
+      <p class="hint" style="text-align:center">Lo borra por completo, con sus pagos y avisos, como si nunca hubiera existido.</p>` : ''}`, bg => {
     const f = $('#payf', bg);
     if (!f) return;
     const when = () => { const d = $('#pd', bg).value || todayISO(); return d < l.start_date ? l.start_date : d; };
@@ -785,9 +790,34 @@ function pinScreen(mode, cancellable = false) {
 // Al volver a la app: pedir la clave si pasaron más de 5 minutos; si no, actualizar los datos
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { if (S.me && !locked) touch(); return; }
+  checkVersion();
   if (!S.me || locked) return;
   if (api.getPin() && idleTooLong()) pinScreen('unlock'); else { touch(); refresh().catch(() => {}); }
 });
+
+/* ---------- Actualización obligatoria ---------- */
+async function checkVersion() {
+  try {
+    const j = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();
+    if (+j.v > APP_VERSION) showUpdate(+j.v);
+  } catch {}
+}
+function showUpdate(v) {
+  if ($('#updov')) return;
+  const ov = document.createElement('div'); ov.className = 'pin'; ov.id = 'updov'; ov.style.zIndex = 60;
+  ov.innerHTML = `<div class="pinbox" role="alertdialog" aria-modal="true" aria-labelledby="updt">${logo}<h2 id="updt">Hay una nueva versión</h2>
+    <p>Actualiza la app para seguir usándola. Toma unos segundos y no pierdes tus datos.</p>
+    <button type="button" class="btn block" id="updb" style="margin-top:22px">Actualizar app</button></div>`;
+  document.body.appendChild(ov);
+  $('#updb', ov).onclick = async () => {
+    $('#updb', ov).disabled = true; $('#updb', ov).textContent = 'Actualizando…';
+    try { for (const k of await caches.keys()) await caches.delete(k); } catch {}
+    try { for (const r of await navigator.serviceWorker.getRegistrations()) await r.update(); } catch {}
+    touch(); location.replace(location.pathname + '?v=' + v);
+  };
+  $('#updb', ov).focus();
+}
+setInterval(checkVersion, 5 * 60 * 1000);
 
 /* ---------- Instalar la app en el celular ---------- */
 let deferredInstall = null;
@@ -861,9 +891,9 @@ document.addEventListener('click', async e => {
   }
   const del = e.target.closest('[data-del]');
   if (del) {
-    if (del.dataset.sure !== '1') { del.dataset.sure = '1'; del.textContent = '¿Eliminar? Toca otra vez'; return; }
+    if (del.dataset.sure !== '1') { del.dataset.sure = '1'; del.textContent = del.dataset.what === 'credito' ? '¿Borrar para siempre? Toca otra vez' : '¿Eliminar? Toca otra vez'; return; }
     del.disabled = true;
-    try { await api.deleteLoan(+del.dataset.del); closeSheet(); await refresh(); toast('Solicitud eliminada.'); } catch (x) { toast(x.message); del.disabled = false; }
+    try { await api.deleteLoan(+del.dataset.del); closeSheet(); await refresh(); toast(del.dataset.what === 'credito' ? 'Crédito eliminado.' : 'Solicitud eliminada.'); } catch (x) { toast(x.message); del.disabled = false; }
     return;
   }
   const t = e.target.closest('[data-act],[data-auth],[data-tab],[data-loan],[data-demo],[data-person]');
@@ -897,5 +927,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.ma
   catch (x) { render(); toast(x.message); }
   if (location.hash === '#instalar' && !isStandalone()) openInstall();
   try { if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js'); } catch {}
+  checkVersion();
 })();
 }
